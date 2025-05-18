@@ -77,17 +77,24 @@ export default function EthicalOverlay() {
       </div>
 
       {expanded && (
-        <div className="space-y-2">
-          <ApiKeyInput
-            provider={provider}
-            setProvider={setProvider}
-            apiKey={apiKey}
-            setApiKey={handleKeyChange}
-            useGpt4={useGpt4}
-            setUseGpt4={setUseGpt4}
-          />
-          <ModelSelector provider={provider} model={model} setModel={setModel} />
-          <WhitelistManager whitelist={whitelist} setWhitelist={setWhitelist} />
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <ApiKeyInput
+              provider={provider}
+              setProvider={setProvider}
+              apiKey={apiKey}
+              setApiKey={handleKeyChange}
+              useGpt4={useGpt4}
+              setUseGpt4={setUseGpt4}
+            />
+            <ModelSelector provider={provider} model={model} setModel={setModel} />
+          </div>
+
+          <hr className="my-2 border-muted" />
+
+          <div className="space-y-1">
+            <WhitelistManager whitelist={whitelist} setWhitelist={setWhitelist} />
+          </div>
         </div>
       )}
 

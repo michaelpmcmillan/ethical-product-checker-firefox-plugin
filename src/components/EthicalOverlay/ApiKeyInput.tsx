@@ -35,6 +35,7 @@ export default function ApiKeyInput({
 
   return (
     <>
+      <h3 className="text-sm font-semibold">Provider Configuration</h3>
       <label className="text-sm font-medium">Provider:</label>
       <select
         value={provider}
