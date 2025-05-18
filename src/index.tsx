@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import EthicalOverlay from "./components/EthicalOverlay";
+import EthicalOverlay from "./components/EthicalOverlay/EthicalOverlay";
 import './index.css';
 
 const root = document.getElementById("root")!;
