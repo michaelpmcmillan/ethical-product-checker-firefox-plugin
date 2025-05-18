@@ -71,7 +71,7 @@ export default function EthicalOverlay() {
   return (
     <Card className="p-4 space-y-4 w-[480px] text-sm">
       <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold">Ethical Info Overlay</h2>
+        <h2 className="text-lg font-semibold">Conscious Cart</h2>
         <SettingsToggle expanded={expanded} setExpanded={setExpanded} />
       </div>
 
