@@ -1,6 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { PROVIDERS } from "@/lib/providers";
+import { PROVIDERS, getProviderMeta } from "@/lib/providers";
 
 type Props = {
   apiKey: string;
@@ -30,6 +30,9 @@ export default function ApiKeyInput({
     localStorage.setItem(`ethical_api_key_${provider}`, key);
   };
 
+  const providerMeta = getProviderMeta(provider);
+  const keyLink = providerMeta?.keyLink || "#";
+
   return (
     <>
       <label className="text-sm font-medium">Provider:</label>
@@ -51,14 +54,9 @@ export default function ApiKeyInput({
         value={apiKey}
         onChange={handleKeyChange}
       />
+
       <a
-        href={
-          provider === "openai"
-            ? "https://platform.openai.com/account/api-keys"
-            : provider === "together"
-            ? "https://platform.together.xyz"
-            : "https://openrouter.ai"
-        }
+        href={keyLink}
         target="_blank"
         className="text-sm text-blue-600 underline"
       >

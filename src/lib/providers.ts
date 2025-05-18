@@ -35,29 +35,25 @@ export const PROVIDERS = [
     id: "openai",
     label: "OpenAI",
     endpoint: "https://api.openai.com/v1/chat/completions",
-    models: [
-      "gpt-4",
-      "gpt-3.5-turbo"
-    ]
+    keyLink: "https://platform.openai.com/account/api-keys",
+    models: ["gpt-4", "gpt-3.5-turbo"]
   },
   {
     id: "together",
     label: "Together.ai (Mistral)",
     endpoint: "https://api.together.xyz/v1/chat/completions",
-    models: [
-      "mistralai/Mistral-7B-Instruct-v0.1",
-      "meta-llama/Llama-Vision-Free"
-    ]
+    keyLink: "https://together.ai/auth/api-keys",
+    models: ["mistralai/Mistral-7B-Instruct-v0.1", "meta-llama/Llama-Vision-Free"]
   },
   {
     id: "openrouter",
     label: "OpenRouter.ai",
-    endpoint: "https://api.openrouter.ai/v1/chat/completions",
-    models: [
-      "mistral-7b-instruct:free"
-    ]
-  },
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    keyLink: "https://openrouter.ai/account/keys",
+    models: ["mistral-7b-instruct:free"]
+  }
 ];
+
 export function getProviderMeta(id: string) {
   return PROVIDERS.find((p) => p.id === id);
 }
