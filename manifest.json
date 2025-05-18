@@ -1,6 +1,6 @@
 {
     "manifest_version": 2,
-    "name": "Ethical Overlay GPT Plugin",
+    "name": "Conscious Cart",
     "version": "0.1",
     "description": "Shows ethical ownership and manufacture info using ChatGPT",
     "permissions": ["tabs", "storage", "activeTab", "scripting"],
