@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { Cog6ToothIcon } from "@heroicons/react/24/solid";
 
 export default function EthicalOverlay() {
   const [url, setUrl] = useState("");
@@ -11,9 +12,11 @@ export default function EthicalOverlay() {
     const saved = localStorage.getItem("ethical_whitelist");
     return saved ? JSON.parse(saved) : ["sainsburys.co.uk", "tesco.com", "amazon.co.uk"];
   });
-  const [result, setResult] = useState(null);
-  const [expanded, setExpanded] = useState(false);
+  const [useGpt4, setUseGpt4] = useState(false);
+  const [showConfig, setShowConfig] = useState(() => !localStorage.getItem("ethical_api_key"));
+  const [result, setResult] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
@@ -25,129 +28,160 @@ export default function EthicalOverlay() {
 
   const handleAnalyze = async () => {
     if (!apiKey || !url) return;
+
     setIsLoading(true);
     setResult(null);
+    setErrorMessage("");
 
-    const prompt = `Analyze the product at the following URL. Identify the brand, the immediate owner, and the full ownership chain. Also identify the country of manufacture for this specific product if available. Output as structured JSON.
+    const model = useGpt4 ? "gpt-4" : "gpt-3.5-turbo";
+    const prompt = `Analyze the product at the following URL. Identify the brand, the immediate owner, and the full ownership chain. Return in this format:
+
+Brand: ___
+Owner: ___
+Manufactured In: ___
+EthicalConsumer | Wikipedia
 
 URL: ${url}`;
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4",
-        messages: [{ role: "user", content: prompt }],
-      }),
-    });
-
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || "";
     try {
-      const json = JSON.parse(content);
-      setResult(json);
-    } catch {
-      setResult({ error: "Failed to parse response:", raw: content });
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        const msg = data?.error?.message || `Request failed with status ${response.status}`;
+        setErrorMessage(msg);
+        console.error("GPT Error:", msg);
+        return;
+      }
+
+      const content = data.choices?.[0]?.message?.content;
+      if (!content) throw new Error("No response from GPT");
+
+      setResult(content.trim());
+    } catch (err: any) {
+      console.error("Failed to parse response:", err);
+      setErrorMessage(err.message || "Unexpected error occurred");
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
-  const saveApiKey = (value) => {
-    localStorage.setItem("ethical_api_key", value);
-    setApiKey(value);
+  const handleAddDomain = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      const domain = e.currentTarget.value.trim();
+      if (domain && !whitelist.includes(domain)) {
+        const updated = [...whitelist, domain];
+        setWhitelist(updated);
+        localStorage.setItem("ethical_whitelist", JSON.stringify(updated));
+      }
+      e.currentTarget.value = "";
+    }
   };
 
-  const saveWhitelist = (list) => {
-    localStorage.setItem("ethical_whitelist", JSON.stringify(list));
-    setWhitelist(list);
+  const handleDeleteDomain = (domain: string) => {
+    const updated = whitelist.filter(d => d !== domain);
+    setWhitelist(updated);
+    localStorage.setItem("ethical_whitelist", JSON.stringify(updated));
+  };
+
+  const handleKeyChange = (key: string) => {
+    setApiKey(key);
+    localStorage.setItem("ethical_api_key", key);
   };
 
   return (
-    <Card className="w-[340px] p-4 space-y-4">
-      <h2 className="text-lg font-bold">Ethical Info Overlay</h2>
+    <Card className="p-4 w-[400px] text-sm">
+      <CardContent>
+        <div className="flex justify-between items-center">
+          <h2 className="font-bold text-lg">Ethical Info Overlay</h2>
+          <button
+            className="text-gray-500 text-lg"
+            title="Toggle Settings"
+            onClick={() => setShowConfig(!showConfig)}
+          >
+            <Cog6ToothIcon className="h-5 w-5" />
+          </button>
+        </div>
 
-      <Input
-        placeholder="OpenAI API Key"
-        value={apiKey}
-        onChange={(e) => saveApiKey(e.target.value)}
-      />
+        {showConfig && (
+          <>
+            <Input
+              className="mt-3"
+              placeholder="OpenAI API Key"
+              value={apiKey}
+              onChange={e => handleKeyChange(e.target.value)}
+            />
+            <a
+              href="https://platform.openai.com/account/api-keys"
+              target="_blank"
+              className="text-blue-500 text-xs mt-1 inline-block"
+            >
+              Don't have a key? Create one here
+            </a>
 
-      <div>
-        <p className="text-sm font-semibold">URL:</p>
-        <p className="text-xs break-all text-gray-600">{url}</p>
-      </div>
+            <div className="flex items-center justify-between mt-4">
+              <label htmlFor="gpt4" className="text-sm">
+                Use GPT-4
+              </label>
+              <Switch
+                id="gpt4"
+                checked={useGpt4}
+                onCheckedChange={v => setUseGpt4(v)}
+              />
+            </div>
 
-      {isWhitelisted ? (
-        <Button disabled={isLoading} onClick={handleAnalyze}>
-          {isLoading ? "Loading..." : "Analyze Page"}
+            <div className="mt-4">
+              <p className="font-semibold mb-1">Whitelist Domains</p>
+              {whitelist.map(domain => (
+                <div key={domain} className="flex justify-between items-center">
+                  <span>{domain}</span>
+                  <button onClick={() => handleDeleteDomain(domain)}>×</button>
+                </div>
+              ))}
+              <Input
+                className="mt-2"
+                placeholder="Add domain (e.g., aldi.co.uk)"
+                onKeyDown={handleAddDomain}
+              />
+            </div>
+          </>
+        )}
+
+        <div className="mt-4 text-xs text-gray-500">
+          <strong>URL:</strong>
+          <div className="break-words">{url}</div>
+        </div>
+
+        <Button
+          className="mt-4 w-full"
+          disabled={!apiKey || !isWhitelisted || isLoading}
+          onClick={handleAnalyze}
+        >
+          {isLoading ? "Analyzing..." : "Analyze Page"}
         </Button>
-      ) : (
-        <p className="text-red-500 text-sm">This domain is not whitelisted</p>
-      )}
 
-      {result && (
-        <CardContent className="text-sm bg-gray-100 rounded p-2">
-          {result.error && <div>{result.error}<pre>{result.raw}</pre></div>}
-          {result.brand && (
-            <>
-              <p><strong>Brand:</strong> {result.brand}</p>
-              <p><strong>Owner:</strong> {result.owner}</p>
-              <p>
-                <strong>Ownership Chain:</strong>{" "}
-                {result.ownership_chain?.[0]}
-                {result.ownership_chain?.length > 1 && (
-                  <>
-                    {!expanded && (
-                      <Button size="sm" variant="link" onClick={() => setExpanded(true)}>
-                        +{result.ownership_chain.length - 1} more
-                      </Button>
-                    )}
-                    {expanded && (
-                      <ul className="list-disc list-inside text-xs mt-1">
-                        {result.ownership_chain.slice(1).map((c, i) => (
-                          <li key={i}>{c}</li>
-                        ))}
-                      </ul>
-                    )}
-                  </>
-                )}
-              </p>
-              <p><strong>Manufactured In:</strong> {result.manufactured_in || "Unknown"}</p>
-            </>
-          )}
-        </CardContent>
-      )}
+        {result && (
+          <pre className="mt-4 p-2 bg-gray-100 rounded text-sm whitespace-pre-wrap">
+            {result}
+          </pre>
+        )}
 
-      <div className="mt-4">
-        <h3 className="font-semibold text-sm">Whitelist Domains</h3>
-        <ul className="text-xs text-gray-700 space-y-1">
-          {whitelist.map((domain, i) => (
-            <li key={i} className="flex justify-between items-center">
-              {domain}
-              <Button size="sm" variant="ghost" onClick={() => {
-                const updated = whitelist.filter((_, idx) => idx !== i);
-                saveWhitelist(updated);
-              }}>✕</Button>
-            </li>
-          ))}
-        </ul>
-        <Input
-          placeholder="Add domain (e.g., aldi.co.uk)"
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              const val = e.target.value.trim();
-              if (val && !whitelist.includes(val)) {
-                saveWhitelist([...whitelist, val]);
-                e.target.value = "";
-              }
-            }
-          }}
-        />
-      </div>
+        {errorMessage && (
+          <div className="mt-4 text-red-600 text-sm">
+            ⚠️ {errorMessage}
+          </div>
+        )}
+      </CardContent>
     </Card>
   );
 }
