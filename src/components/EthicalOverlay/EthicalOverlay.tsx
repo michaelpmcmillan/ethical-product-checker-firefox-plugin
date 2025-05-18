@@ -71,13 +71,23 @@ export default function EthicalOverlay() {
 
   return (
     <Card className="p-4 space-y-4 w-[480px] text-sm">
-      <h2 className="text-lg font-semibold">Ethical Info Overlay</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-semibold">Ethical Info Overlay</h2>
+        <SettingsToggle expanded={expanded} setExpanded={setExpanded} />
+      </div>
 
-      {(apiKey || expanded) && (
+      {expanded && (
         <div className="space-y-2">
-          <ApiKeyInput provider={provider} setProvider={setProvider} apiKey={apiKey} setApiKey={handleKeyChange} useGpt4={useGpt4} setUseGpt4={setUseGpt4} />
+          <ApiKeyInput
+            provider={provider}
+            setProvider={setProvider}
+            apiKey={apiKey}
+            setApiKey={handleKeyChange}
+            useGpt4={useGpt4}
+            setUseGpt4={setUseGpt4}
+          />
           <ModelSelector provider={provider} model={model} setModel={setModel} />
-          <WhitelistManager  whitelist={whitelist} setWhitelist={setWhitelist} />
+          <WhitelistManager whitelist={whitelist} setWhitelist={setWhitelist} />
         </div>
       )}
 
@@ -88,7 +98,6 @@ export default function EthicalOverlay() {
           onClick={() => setExpanded(!expanded)}
           className="text-xs"
         >
-          {expanded ? <ChevronUpIcon className="h-4 w-4" /> : <ChevronDownIcon className="h-4 w-4" />}
         </Button>
       </div>
 
