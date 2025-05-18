@@ -1,4 +1,5 @@
 import { getProviderMeta } from "./providers";
+import prompt from "./prompt.json";
 
 export async function analyzePage(provider: string, apiKey: string, url: string, model: string) {
   const endpoint = getProviderMeta(provider)?.endpoint;
@@ -10,16 +11,16 @@ export async function analyzePage(provider: string, apiKey: string, url: string,
   };
 
   if (provider === "openrouter") {
-    headers["HTTP-Referer"] = "https://your-extension-domain.com";
-    headers["X-Title"] = "Ethical Info Extension";
+    headers["HTTP-Referer"] = "https://www.mikemcmillan.dev/";
+    headers["X-Title"] = "Conscious Cart Extension";
   }
 
   const body = {
     model,
     messages: [
-      { role: "system", content: "You are an ethical sourcing assistant..." },
-      { role: "user", content: `Analyze the ethical background of the product at: ${url}` },
-    ],
+      { role: "system", content: prompt.system },
+      { role: "user", content: `Please analyze this product page: ${url}` },
+    ]
   };
 
   const res = await fetch(endpoint, {
