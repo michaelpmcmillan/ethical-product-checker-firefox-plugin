@@ -23,7 +23,6 @@ export default function EthicalOverlay() {
     const saved = localStorage.getItem("ethical_api_keys");
     return saved ? JSON.parse(saved) : {};
   });
-  const [useGpt4, setUseGpt4] = useState(false);
 
   const apiKey = apiKeys[provider] || "";
 
@@ -84,8 +83,6 @@ export default function EthicalOverlay() {
               setProvider={setProvider}
               apiKey={apiKey}
               setApiKey={handleKeyChange}
-              useGpt4={useGpt4}
-              setUseGpt4={setUseGpt4}
             />
             <ModelSelector provider={provider} model={model} setModel={setModel} />
           </div>

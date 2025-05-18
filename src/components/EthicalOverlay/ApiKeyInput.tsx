@@ -1,14 +1,11 @@
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { PROVIDERS, getProviderMeta } from "@/lib/providers";
+import { PROVIDERS } from "@/lib/providers";
 
 type Props = {
   apiKey: string;
   setApiKey: (key: string) => void;
   provider: string;
   setProvider: (p: string) => void;
-  useGpt4: boolean;
-  setUseGpt4: (b: boolean) => void;
 };
 
 export default function ApiKeyInput({
@@ -16,12 +13,9 @@ export default function ApiKeyInput({
   setApiKey,
   provider,
   setProvider,
-  useGpt4,
-  setUseGpt4,
 }: Props) {
   const handleProviderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newProvider = e.target.value;
-    setProvider(newProvider);
+    setProvider(e.target.value);
   };
 
   const handleKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -30,46 +24,45 @@ export default function ApiKeyInput({
     localStorage.setItem(`ethical_api_key_${provider}`, key);
   };
 
-  const providerMeta = getProviderMeta(provider);
-  const keyLink = providerMeta?.keyLink || "#";
+  const providerMeta = PROVIDERS.find((p) => p.id === provider);
 
   return (
-    <>
-      <h3 className="text-sm font-semibold">Provider Configuration</h3>
-      <label className="text-sm font-medium">Provider:</label>
-      <select
-        value={provider}
-        onChange={handleProviderChange}
-        className="rounded border p-1"
-      >
-        {PROVIDERS.map(({ id, label }) => (
-          <option key={id} value={id}>
-            {label}
-          </option>
-        ))}
-      </select>
+    <div className="space-y-2">
+      <div>
+        <h3 className="text-sm font-semibold">Provider Configuration</h3>
+        <label className="block text-sm font-medium mb-1">Provider:</label>
+        <select
+          value={provider}
+          onChange={handleProviderChange}
+          className="w-full border rounded px-2 py-1"
+        >
+          {PROVIDERS.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.label}
+            </option>
+          ))}
+        </select>
+      </div>
 
-      <Input
-        type="text"
-        placeholder={`${provider} API Key`}
-        value={apiKey}
-        onChange={handleKeyChange}
-      />
-
-      <a
-        href={keyLink}
-        target="_blank"
-        className="text-sm text-blue-600 underline"
-      >
-        Don’t have a key? Create one here
-      </a>
-
-      {provider === "openai" && (
-        <div className="flex items-center justify-between mt-2">
-          <span className="text-sm">Use GPT-4</span>
-          <Switch checked={useGpt4} onCheckedChange={setUseGpt4} />
-        </div>
-      )}
-    </>
+      <div>
+        <label className="block text-sm font-medium mb-1">API Key:</label>
+        <Input
+          type="text"
+          placeholder={`${provider} API Key`}
+          value={apiKey}
+          onChange={handleKeyChange}
+        />
+        {providerMeta?.signupUrl && (
+          <a
+            href={providerMeta.signupUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="text-sm text-blue-600 underline"
+          >
+            Don't have a key? Create one here
+          </a>
+        )}
+      </div>
+    </div>
   );
 }
