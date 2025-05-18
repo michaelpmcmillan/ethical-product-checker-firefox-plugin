@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/solid";
 import ApiKeyInput from "./ApiKeyInput";
 import WhitelistManager from "./WhitelistManager";
 import ResultDisplay from "./ResultDisplay";
@@ -44,7 +43,8 @@ export default function EthicalOverlay() {
 
     try {
       const resultText = await analyzePage(provider, apiKey, url, model);
-      setResult(resultText);
+      console.log(resultText);
+      setResult(JSON.parse(resultText));
     } catch (err: any) {
       setResult("⚠️ Request failed: " + err.message);
     } finally {
