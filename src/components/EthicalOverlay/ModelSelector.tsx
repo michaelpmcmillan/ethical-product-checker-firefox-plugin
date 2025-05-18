@@ -13,7 +13,7 @@ export default function ModelSelector({ provider, model, setModel }: Props) {
   if (!selectedProvider || !selectedProvider.models) return null;
 
   return (
-    <div className="space-y-1">
+    <div className="pl-4 space-y-2">
       <label className="font-medium">Model:</label>
       <select
         value={model}

@@ -27,22 +27,24 @@ export default function WhitelistManager({ whitelist, setWhitelist }: Props) {
   return (
     <div className="mt-4">
       <h3 className="text-sm font-semibold">Whitelist Domains</h3>
-      {whitelist.map((domain) => (
-        <div key={domain} className="flex justify-between items-center">
-          <span>{domain}</span>
-          <button
-            onClick={() => removeDomain(domain)}
-            className="text-red-600 hover:text-red-800"
-          >
-            ×
-          </button>
-        </div>
-      ))}
-      <Input
-        placeholder="Add domain (e.g., aldi.co.uk)"
-        onKeyDown={addDomain}
-        className="mt-2"
-      />
+      <div className="pl-4 space-y-2">
+        {whitelist.map((domain) => (
+          <div key={domain} className="flex justify-between items-center">
+            <span>{domain}</span>
+            <button
+              onClick={() => removeDomain(domain)}
+              className="text-red-600 hover:text-red-800"
+            >
+              ×
+            </button>
+          </div>
+        ))}
+        <Input
+          placeholder="Add domain (e.g., aldi.co.uk)"
+          onKeyDown={addDomain}
+          className="mt-2"
+        />
+      </div>
     </div>
   );
 }

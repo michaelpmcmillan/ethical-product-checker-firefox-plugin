@@ -28,40 +28,42 @@ export default function ApiKeyInput({
 
   return (
     <div className="space-y-2">
-      <div>
-        <h3 className="text-sm font-semibold">Provider Configuration</h3>
-        <label className="block text-sm font-medium mb-1">Provider:</label>
-        <select
-          value={provider}
-          onChange={handleProviderChange}
-          className="w-full border rounded px-2 py-1"
-        >
-          {PROVIDERS.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium mb-1">API Key:</label>
-        <Input
-          type="text"
-          placeholder={`${provider} API Key`}
-          value={apiKey}
-          onChange={handleKeyChange}
-        />
-        {providerMeta?.signupUrl && (
-          <a
-            href={providerMeta.signupUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="text-sm text-blue-600 underline"
+      <h3 className="text-sm font-semibold">Provider Configuration</h3>
+      <div className="pl-4 space-y-2">
+        <div>
+          <label className="block text-sm font-medium mb-1">Provider:</label>
+          <select
+            value={provider}
+            onChange={handleProviderChange}
+            className="w-full border rounded px-2 py-1"
           >
-            Don't have a key? Create one here
-          </a>
-        )}
+            {PROVIDERS.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">API Key:</label>
+          <Input
+            type="text"
+            placeholder={`${provider} API Key`}
+            value={apiKey}
+            onChange={handleKeyChange}
+          />
+          {providerMeta?.signupUrl && (
+            <a
+              href={providerMeta.signupUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-sm text-blue-600 underline"
+            >
+              Don't have a key? Create one here
+            </a>
+          )}
+        </div>
       </div>
     </div>
   );
