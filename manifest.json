@@ -1,0 +1,19 @@
+{
+    "manifest_version": 3,
+    "name": "Ethical Overlay GPT Plugin",
+    "version": "0.1",
+    "description": "Shows ethical ownership and manufacture info using ChatGPT",
+    "permissions": ["tabs", "storage", "activeTab", "scripting"],
+    "host_permissions": ["<all_urls>"],
+    "action": {
+      "default_popup": "popup.html",
+      "default_icon": "public/icon.png"
+    },
+    "background": {
+      "service_worker": "background.js"
+    },
+    "icons": {
+      "48": "public/icon.png"
+    }
+  }
+  
