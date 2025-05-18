@@ -1,5 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { PROVIDERS } from "@/lib/providers";
 
 type Props = {
   apiKey: string;
@@ -37,8 +38,11 @@ export default function ApiKeyInput({
         onChange={handleProviderChange}
         className="rounded border p-1"
       >
-        <option value="openai">OpenAI</option>
-        <option value="together">Together.ai (Mistral)</option>
+        {PROVIDERS.map(({ id, label }) => (
+          <option key={id} value={id}>
+            {label}
+          </option>
+        ))}
       </select>
 
       <Input
@@ -51,7 +55,9 @@ export default function ApiKeyInput({
         href={
           provider === "openai"
             ? "https://platform.openai.com/account/api-keys"
-            : "https://platform.together.xyz"
+            : provider === "together"
+            ? "https://platform.together.xyz"
+            : "https://openrouter.ai"
         }
         target="_blank"
         className="text-sm text-blue-600 underline"

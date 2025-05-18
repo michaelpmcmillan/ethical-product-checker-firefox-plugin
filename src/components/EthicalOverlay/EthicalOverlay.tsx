@@ -1,27 +1,36 @@
-import { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import React, { useEffect, useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/solid";
 import ApiKeyInput from "./ApiKeyInput";
 import WhitelistManager from "./WhitelistManager";
 import ResultDisplay from "./ResultDisplay";
-import AnalyzeButton from "./AnalyzeButton";
+import { analyzePage } from "../../lib/analyze";
 import SettingsToggle from "./SettingsToggle";
+import ModelSelector from "./ModelSelector";
 
 export default function EthicalOverlay() {
   const [url, setUrl] = useState("");
-  const [provider, setProvider] = useState(
-    localStorage.getItem("ethical_provider") || "openai"
-  );
-  const [apiKey, setApiKey] = useState(
-    localStorage.getItem(`ethical_api_key_${provider}`) || ""
-  );
-  const [useGpt4, setUseGpt4] = useState(false);
-  const [whitelist, setWhitelist] = useState(() => {
-    const saved = localStorage.getItem("ethical_whitelist");
-    return saved ? JSON.parse(saved) : ["sainsburys.co.uk"];
-  });
   const [result, setResult] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState(!apiKey);
   const [isLoading, setIsLoading] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [provider, setProvider] = useState(() => localStorage.getItem("ethical_provider") || "openai");
+  const [model, setModel] = useState(() => {
+    const saved = localStorage.getItem(`ethical_model_${provider}`);
+    return saved || "";
+  });
+  const [apiKeys, setApiKeys] = useState(() => {
+    const saved = localStorage.getItem("ethical_api_keys");
+    return saved ? JSON.parse(saved) : {};
+  });
+  const [useGpt4, setUseGpt4] = useState(false);
+
+  const apiKey = apiKeys[provider] || "";
+
+  useEffect(() => {
+    const saved = localStorage.getItem(`ethical_model_${provider}`);
+    setModel(saved || "");
+  }, [provider]);
 
   useEffect(() => {
     chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
@@ -29,53 +38,72 @@ export default function EthicalOverlay() {
     });
   }, []);
 
-  const isWhitelisted = whitelist.some((domain) => url.includes(domain));
+  const handleAnalyze = async () => {
+    if (!apiKey || !url) return;
+    setIsLoading(true);
+    setResult(null);
 
-  // Switch API key when provider changes
-  const handleProviderChange = (newProvider: string) => {
-    setProvider(newProvider);
-    localStorage.setItem("ethical_provider", newProvider);
-    const storedKey = localStorage.getItem(`ethical_api_key_${newProvider}`) || "";
-    setApiKey(storedKey);
+    try {
+      const resultText = await analyzePage(provider, apiKey, url, model);
+      setResult(resultText);
+    } catch (err: any) {
+      setResult("⚠️ Request failed: " + err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
+  const handleKeyChange = (key: string) => {
+    const updated = { ...apiKeys, [provider]: key };
+    setApiKeys(updated);
+    localStorage.setItem("ethical_api_keys", JSON.stringify(updated));
+  };
+
+  const isWhitelisted = ["sainsburys.co.uk", "tesco.com", "amazon.co.uk"].some(domain =>
+    url.includes(domain)
+  );
+
+  const [whitelist, setWhitelist] = useState<string[]>([
+    "sainsburys.co.uk",
+    "tesco.com",
+    "amazon.co.uk",
+  ]);
+
   return (
-    <Card className="w-[360px] p-4">
-      <CardContent className="flex flex-col gap-4">
-        <SettingsToggle expanded={expanded} onToggle={() => setExpanded(!expanded)} />
+    <Card className="p-4 space-y-4 w-[480px] text-sm">
+      <h2 className="text-lg font-semibold">Ethical Info Overlay</h2>
 
-        {expanded && (
-          <>
-            <ApiKeyInput
-              apiKey={apiKey}
-              setApiKey={setApiKey}
-              provider={provider}
-              setProvider={handleProviderChange}
-              useGpt4={useGpt4}
-              setUseGpt4={setUseGpt4}
-            />
-            <WhitelistManager whitelist={whitelist} setWhitelist={setWhitelist} />
-          </>
-        )}
-
-        <div>
-          <h4 className="text-xs text-gray-500">URL:</h4>
-          <p className="text-sm break-all">{url}</p>
+      {(apiKey || expanded) && (
+        <div className="space-y-2">
+          <ApiKeyInput provider={provider} setProvider={setProvider} apiKey={apiKey} setApiKey={handleKeyChange} useGpt4={useGpt4} setUseGpt4={setUseGpt4} />
+          <ModelSelector provider={provider} model={model} setModel={setModel} />
+          <WhitelistManager  whitelist={whitelist} setWhitelist={setWhitelist} />
         </div>
+      )}
 
-        <AnalyzeButton
-          disabled={!isWhitelisted || !apiKey || isLoading}
-          isLoading={isLoading}
-          provider={provider}
-          useGpt4={useGpt4}
-          apiKey={apiKey}
-          url={url}
-          setIsLoading={setIsLoading}
-          setResult={setResult}
-        />
+      <div className="flex justify-end">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setExpanded(!expanded)}
+          className="text-xs"
+        >
+          {expanded ? <ChevronUpIcon className="h-4 w-4" /> : <ChevronDownIcon className="h-4 w-4" />}
+        </Button>
+      </div>
 
-        <ResultDisplay result={result} />
-      </CardContent>
+      <div>
+        <p className="text-muted-foreground text-xs mb-1">URL:</p>
+        <p className="break-words text-xs">{url}</p>
+      </div>
+
+      {isWhitelisted && (
+        <Button onClick={handleAnalyze} disabled={isLoading} className="w-full">
+          {isLoading ? "Analyzing..." : "Analyze Page"}
+        </Button>
+      )}
+
+      {result && <ResultDisplay result={result} />}
     </Card>
   );
 }
